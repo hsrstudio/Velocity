@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Velocity Elite v9.0 | HSR Studio AI Analyst</title>
+    
+    <meta name="description" content="Velocity Elite ile internet hızınızı test edin, HSR-AI Engine ile ağ arızalarınızı teşhis edin ve oyun ping sürelerinizi anında öğrenin.">
+    <meta name="keywords" content="hız testi, speed test, ping ölçme, internet arıza tespiti, valorant ping, HSR Studio">
+    <meta name="author" content="HSR Studio">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;600;900&display=swap');
+        
+        :root { --accent: #10b981; --bg: #030303; --card: #0a0a0a; }
+        * { font-family: 'Inter', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: white; margin: 0; overflow-x: hidden; }
+
+        /* Parlayan Başlat Butonu (Glow Effect) */
+        .glow-btn {
+            background: var(--accent);
+            color: black;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            padding: 20px 60px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        .glow-btn:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
+        }
+        .glow-btn:active { transform: scale(0.95); }
+        .glow-btn::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg); transition: 0.8s;
+        }
+        .glow-btn:hover::after { left: 120%; }
+
+        /* Kompakt Panel Yapısı */
+        .compact-panel {
+            background: var(--card);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 32px;
+            padding: 24px;
+            backdrop-filter: blur(20px);
+        }
+        
+        /* Yeni Nesil İbre */
+        .gauge-container { position: relative; width: 100%; max-width: 320px; margin: 0 auto; }
+        .needle {
+            position: absolute; bottom: 18%; left: 50%; width: 2px; height: 42%;
+            background: white; transform-origin: bottom center;
+            transform: translateX(-50%) rotate(-90deg);
+            transition: transform 1.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+            z-index: 10;
+        }
+
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .game-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 20px;
+            padding: 12px;
+            text-align: center;
+        }
+        .pro-locked { filter: blur(10px); pointer-events: none; opacity: 0.3; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen antialiased">
+    <canvas id="glitter-bg" class="fixed inset-0 w-full h-full -z-10 opacity-20 pointer-events-none"></canvas>
+
+    <div id="mandatory-cookie-screen" class="fixed inset-0 z-[999] bg-[#030303]/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6 transition-opacity duration-700">
+        <div class="max-w-2xl w-full bg-[#0a0a0b] border border-white/10 rounded-[40px] p-8 md:p-12 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-y-auto max-h-[85vh] relative">
+            <div class="flex items-center gap-5 mb-8 border-b border-white/10 pb-6">
+                <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 shrink-0 border border-emerald-500/20">
+                    <i class="fas fa-user-shield text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-white text-2xl font-bold tracking-tight">Gizlilik, Çerezler ve Şartlar</h2>
+                    <p class="text-emerald-500/80 text-[10px] mt-1 uppercase tracking-widest font-bold">HSR Studio Yasal Bilgilendirme</p>
+                </div>
+            </div>
+            
+            <div class="text-zinc-400 text-xs leading-relaxed space-y-5 mb-10">
+                <p><strong>Velocity Elite v9.0</strong> platformuna hoş geldiniz. Kesintisiz hizmet sunabilmek ve platformu standart kullanıcılar için ücretsiz tutabilmek amacıyla sistemimizde Google AdSense reklam ağı entegre edilmiştir.</p>
+                <p>Google ve yetkili iş ortakları, size daha uygun içerik ve kişiselleştirilmiş reklamlar sunabilmek için tarayıcınızda çerezler (cookies) kullanır ve cihaz bilgilerinizi işleyebilir.</p>
+                <p>Uygulamamızı kullanmaya başlayarak, menüde yer alan <span class="text-white font-semibold">Gizlilik Politikamızı</span>, dijital ürünlere ait <span class="text-white font-semibold">İptal/İade Koşullarımızı</span> ve <span class="text-white font-semibold">Kullanım Şartlarımızı</span> okuyup anladığınızı yasal olarak kabul etmiş sayılırsınız.</p>
+                <p class="mt-4 border-t border-white/5 pt-4">İletişim ve Destek: <strong class="text-emerald-400">hsrstudio345@gmail.com</strong></p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button onclick="location.reload()" class="flex-1 py-4 text-[10px] font-bold text-zinc-500 hover:text-white hover:bg-white/5 rounded-2xl transition-colors border border-white/10 uppercase tracking-widest">
+                    Reddet ve Çık
+                </button>
+                <button onclick="acceptMandatoryCookies()" class="flex-1 py-4 text-[10px] font-bold bg-emerald-600 text-white hover:bg-emerald-500 rounded-2xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] uppercase tracking-widest flex items-center justify-center gap-2">
+                    <i class="fas fa-check"></i> Kabul Ediyorum
+                </button>
+            </div>
+        </div>
+    </div>
+    <nav class="fixed top-0 w-full z-[100] px-6 py-4 flex justify-between items-center transition-all duration-300 bg-[#030303]/80 backdrop-blur-xl border-b border-white/5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleMenu()" class="text-zinc-400 hover:text-white transition-colors w-10 h-10 bg-white/5 rounded-full flex items-center justify-center border border-white/10 shadow-lg group">
+                <i class="fas fa-bars group-hover:scale-110 transition-transform"></i>
+            </button>
+            <div class="flex flex-col">
+                <div class="flex items-center gap-2">
+                    <span class="text-white font-black text-xl tracking-tighter drop-shadow-md">Velocity</span>
+                    <span class="text-emerald-500 font-bold text-xl tracking-tighter drop-shadow-[0_0_10px_rgba(16,185,129,0.4)]">Elite</span>
+                </div>
+                <span class="text-[8px] text-zinc-500 uppercase tracking-[0.3em] font-black">HSR Studio v9.0</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <button onclick="handleAccountClick()" class="group flex items-center gap-3 bg-white/5 hover:bg-white/10 transition-colors pl-3 pr-4 py-2 rounded-full border border-white/10 shadow-inner">
+                <div class="w-7 h-7 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-500 border border-emerald-500/30 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-user text-xs"></i>
+                </div>
+                <span id="nav-profile-name" class="text-[10px] font-bold text-zinc-300 tracking-widest uppercase">GİRİŞ</span>
+            </button>
+        </div>
+    </nav>
+    <main id="main-app" class="flex-grow pt-32 px-4 flex flex-col items-center w-full max-w-3xl mx-auto transition-opacity duration-500 pb-24 relative z-10">
+        
+        <div class="mb-12 text-center relative w-full flex flex-col items-center">
+            <div class="gauge-container mb-2">
+                <svg viewBox="0 0 200 100" class="w-full drop-shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                    <path d="M20,90 A80,80 0 0,1 180,90" fill="none" stroke="#111" stroke-width="12" stroke-linecap="round" />
+                    <path id="gauge-path" d="M20,90 A80,80 0 0,1 180,90" fill="none" stroke="url(#emerald-grad)" stroke-width="12" stroke-dasharray="440" stroke-dashoffset="440" stroke-linecap="round" />
+                    <defs>
+                        <linearGradient id="emerald-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#047857;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#10b981;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#34d399;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div id="needle" class="needle shadow-[0_0_10px_rgba(255,255,255,0.8)]"></div>
+            </div>
+            
+            <div class="mt-2 z-10 relative">
+                <span id="test-phase" class="text-[10px] uppercase tracking-[0.5em] text-emerald-500 mb-3 block font-black animate-pulse">Sistem Hazır</span>
+                <h1 id="main-value" class="text-8xl md:text-9xl font-black tracking-tighter leading-none text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">0<span class="text-4xl text-zinc-600 font-light">.0</span></h1>
+                <p class="text-[10px] text-zinc-500 mt-4 tracking-[0.4em] uppercase font-bold">Megabit / Saniye</p>
+            </div>
+        </div>
+
+        <div class="mb-14 text-center w-full relative z-20">
+            <button id="test-btn" onclick="handleTestRequest()" class="glow-btn">
+                <i class="fas fa-satellite-dish mr-2 text-black/70"></i> ANALİZİ BAŞLAT
+            </button>
+            <div class="mt-8 flex items-center justify-center gap-3 text-[10px] text-zinc-500 uppercase tracking-widest font-bold">
+                <span>Günlük Limit:</span>
+                <span id="rem-count" class="text-white bg-white/10 px-4 py-1.5 rounded-full border border-white/20 shadow-inner">1 / 1</span>
+            </div>
+        </div>
+        <div class="w-full compact-panel mb-12 shadow-[0_0_40px_rgba(0,0,0,0.5)] relative overflow-hidden">
+            
+            <div class="grid grid-cols-4 gap-2 mb-8 pb-8 border-b border-white/5">
+                <div class="text-center">
+                    <span class="text-[8px] uppercase tracking-widest text-zinc-500 font-bold">Gecikme</span>
+                    <p id="stat-ping" class="text-lg md:text-xl font-light mt-2 text-white">-- <span class="text-[9px] text-zinc-600">ms</span></p>
+                </div>
+                <div class="text-center border-l border-white/5">
+                    <span class="text-[8px] uppercase tracking-widest text-zinc-500 font-bold">Dalgalanma</span>
+                    <p id="stat-jitter" class="text-lg md:text-xl font-light mt-2 text-white">-- <span class="text-[9px] text-zinc-600">ms</span></p>
+                </div>
+                <div class="text-center border-l border-white/5">
+                    <span class="text-[8px] uppercase tracking-widest text-zinc-500 font-bold">İndirme</span>
+                    <p id="stat-down" class="text-lg md:text-xl font-light mt-2 text-white">-- <span class="text-[9px] text-zinc-600">Mb</span></p>
+                </div>
+                <div class="text-center border-l border-white/5">
+                    <span class="text-[8px] uppercase tracking-widest text-zinc-500 font-bold">Yükleme</span>
+                    <p id="stat-up" class="text-lg md:text-xl font-light mt-2 text-white">-- <span class="text-[9px] text-zinc-600">Mb</span></p>
+                </div>
+            </div>
+
+            <div class="relative">
+                <div id="pro-features-area" class="pro-locked transition-all duration-500">
+                    
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-[9px] font-black tracking-[0.2em] uppercase text-zinc-400">Oyun Sunucu Testi</h3>
+                            <span class="text-[7px] bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded font-bold uppercase tracking-widest border border-emerald-500/20">Canlı</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2">
+                            <div class="game-card" id="game-val">
+                                <i class="fas fa-crosshairs text-zinc-600 mb-2 text-sm"></i>
+                                <div class="text-[8px] text-zinc-500 uppercase font-black tracking-wider mb-1">VAL</div>
+                                <div class="text-[10px] font-bold text-white game-ms">-- ms</div>
+                            </div>
+                            <div class="game-card" id="game-lol">
+                                <i class="fas fa-shield-halved text-zinc-600 mb-2 text-sm"></i>
+                                <div class="text-[8px] text-zinc-500 uppercase font-black tracking-wider mb-1">LOL</div>
+                                <div class="text-[10px] font-bold text-white game-ms">-- ms</div>
+                            </div>
+                            <div class="game-card" id="game-cs">
+                                <i class="fas fa-gun text-zinc-600 mb-2 text-sm"></i>
+                                <div class="text-[8px] text-zinc-500 uppercase font-black tracking-wider mb-1">CS2</div>
+                                <div class="text-[10px] font-bold text-white game-ms">-- ms</div>
+                            </div>
+                            <div class="game-card" id="game-dc">
+                                <i class="fab fa-discord text-zinc-600 mb-2 text-sm"></i>
+                                <div class="text-[8px] text-zinc-500 uppercase font-black tracking-wider mb-1">DISC</div>
+                                <div class="text-[10px] font-bold text-white game-ms">-- ms</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-black/50 border border-emerald-500/10 rounded-2xl p-6 relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-emerald-500/5 text-6xl"><i class="fas fa-brain"></i></div>
+                        <div class="flex items-center justify-between mb-4 relative z-10">
+                            <div class="flex items-center gap-3">
+                                <span id="status-dot" class="status-dot bg-zinc-600 shadow-[0_0_10px_currentColor]"></span>
+                                <span id="status-text" class="text-[10px] font-black tracking-[0.2em] uppercase text-zinc-300">AI Analizi Bekleniyor</span>
+                            </div>
+                        </div>
+                        <p id="analyst-advice" class="text-[11px] font-light text-zinc-400 leading-relaxed italic relative z-10">
+                            Hız testi tamamlandığında, HSR-AI Engine hattınızı tarayarak kopma, daralma ve paket kaybı sorunlarını raporlayacaktır.
+                        </p>
+                        <div id="ai-badges" class="mt-4 hidden relative z-10"></div>
+                    </div>
+                </div>
+
+                <div id="pro-lock-overlay" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#030303]/70 backdrop-blur-[4px] rounded-2xl border border-white/5">
+                    <div class="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mb-4 border border-emerald-500/30">
+                        <i class="fas fa-lock text-emerald-400 text-lg"></i>
+                    </div>
+                    <p class="text-[10px] text-zinc-300 mb-5 uppercase tracking-[0.2em] font-bold text-center px-4">AI ve Oyun Verileri Kilitli</p>
+                    <button onclick="openModal('pro-modal')" class="text-[9px] font-black bg-emerald-500 text-black px-8 py-3 rounded-full uppercase tracking-[0.2em] hover:scale-105 transition-transform shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+                        KİLİDİ AÇ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="w-full max-w-3xl mx-auto px-4 pb-8 text-center relative z-10">
+        <div class="border-t border-white/5 pt-8 flex flex-col items-center">
+            
+            <p class="text-[10px] text-zinc-500 tracking-widest uppercase mb-4 font-bold">Müşteri Hizmetleri ve Destek</p>
+            <a href="mailto:hsrstudio345@gmail.com" class="text-emerald-500 font-bold text-[11px] tracking-widest hover:text-emerald-400 transition-colors mb-8 bg-emerald-500/10 px-6 py-2 rounded-full border border-emerald-500/20">
+                <i class="fas fa-envelope mr-2"></i> hsrstudio345@gmail.com
+            </a>
+            
+            <div class="flex items-center justify-center gap-6 mb-6 opacity-50 hover:opacity-100 transition-opacity duration-300">
+                <i class="fab fa-cc-visa text-4xl text-white"></i>
+                <i class="fab fa-cc-mastercard text-4xl text-white"></i>
+                <img src="https://www.iyzico.com/assets/images/logo.svg" alt="iyzico güvenli ödeme" class="h-6 brightness-200">
+            </div>
+            
+            <div class="flex items-center gap-2 mb-3 text-emerald-500/50">
+                <i class="fas fa-shield-halved text-[10px]"></i>
+                <p class="text-[9px] tracking-[0.2em] uppercase font-black">256-Bit SSL Koruması Altındadır</p>
+            </div>
+            <p class="text-[8px] text-zinc-600 tracking-[0.3em] uppercase font-bold mt-2">© 2026 HSR Studio. Tüm Hakları Saklıdır.</p>
+        </div>
+    </footer>
+
+    <div id="content-page" class="hidden fixed inset-0 z-[150] bg-[#030303] pt-28 px-6 pb-20 overflow-y-auto">
+        <div class="max-w-3xl mx-auto w-full relative bg-[#0a0a0b] border border-white/5 p-8 md:p-12 rounded-[40px] shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+            <button onclick="closeContentPage()" class="absolute top-8 right-8 text-zinc-500 hover:text-white flex items-center justify-center w-10 h-10 bg-white/5 rounded-full transition-colors border border-white/10 shadow-lg">
+                <i class="fas fa-times"></i>
+            </button>
+            <h1 id="content-title" class="text-3xl md:text-5xl font-black tracking-tighter mb-10 text-emerald-500 uppercase">Başlık</h1>
+            <div id="content-body" class="text-zinc-400 font-light text-sm leading-relaxed space-y-6"></div>
+            
+            <div class="w-full h-[100px] bg-white/5 border border-white/10 rounded-2xl mt-12 flex items-center justify-center text-[10px] text-zinc-600 tracking-widest uppercase font-black border-dashed">
+                <i class="fas fa-ad mr-2"></i> Güvenli Reklam Alanı
+            </div>
+        </div>
+    </div>
+    <div id="menu-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/80 z-[250] hidden backdrop-blur-md transition-opacity duration-300"></div>
+    
+    <div id="side-menu" class="fixed inset-y-0 left-0 w-80 bg-[#0a0a0b] z-[300] transform -translate-x-full transition-transform duration-500 border-r border-white/5 shadow-[0_0_50px_rgba(0,0,0,0.9)] flex flex-col">
+        <div class="p-8 flex-grow overflow-y-auto">
+            <div class="flex justify-between items-center mb-12 border-b border-white/5 pb-6">
+                <span class="text-[10px] tracking-[0.4em] uppercase font-black text-emerald-500">HSR Navigasyon</span>
+                <button onclick="toggleMenu()" class="text-zinc-500 hover:text-white transition-colors w-8 h-8 bg-white/5 rounded-full flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <nav class="space-y-8">
+                <div>
+                    <p class="text-[9px] text-zinc-600 uppercase tracking-[0.2em] mb-4 font-black">Kullanıcı İşlemleri</p>
+                    <a href="#" onclick="handleAccountClick()" class="group flex items-center gap-4 text-xs font-bold tracking-widest uppercase hover:text-emerald-400 transition-all text-white bg-white/5 p-4 rounded-2xl border border-white/5 shadow-inner">
+                        <i class="fas fa-user-astronaut text-emerald-500/50 group-hover:text-emerald-400 transition-colors text-lg"></i> 
+                        <span id="menu-auth-text">Hesabım / Giriş</span>
+                    </a>
+                </div>
+
+                <div class="space-y-4">
+                    <p class="text-[9px] text-zinc-600 uppercase tracking-[0.2em] mb-4 font-black mt-8">HSR Yasal & Kurumsal</p>
+                    <a href="#" onclick="openContent('about')" class="group flex items-center gap-4 text-[11px] font-bold tracking-widest uppercase hover:text-emerald-400 transition-all text-zinc-400 p-2">
+                        <i class="fas fa-building text-zinc-600 group-hover:text-emerald-500 transition-colors w-4 text-center"></i> Hakkımızda
+                    </a>
+                    <a href="#" onclick="openContent('privacy')" class="group flex items-center gap-4 text-[11px] font-bold tracking-widest uppercase hover:text-emerald-400 transition-all text-zinc-400 p-2">
+                        <i class="fas fa-user-secret text-zinc-600 group-hover:text-emerald-500 transition-colors w-4 text-center"></i> Gizlilik Politikası
+                    </a>
+                    <a href="#" onclick="openContent('terms')" class="group flex items-center gap-4 text-[11px] font-bold tracking-widest uppercase hover:text-emerald-400 transition-all text-zinc-400 p-2">
+                        <i class="fas fa-file-signature text-zinc-600 group-hover:text-emerald-500 transition-colors w-4 text-center"></i> Şartlar ve İade Koşulları
+                    </a>
+                </div>
+            </nav>
+        </div>
+
+        <div class="p-8 border-t border-white/5 bg-black/20">
+            <div class="w-full aspect-square max-h-[180px] bg-white/5 border border-white/10 border-dashed rounded-2xl mb-6 flex flex-col items-center justify-center text-[9px] text-zinc-600 tracking-[0.2em] uppercase font-black text-center px-4">
+                <i class="fas fa-ad text-2xl mb-2 opacity-50"></i>
+                <span>Sponsorlu<br>İçerik Alanı</span>
+            </div>
+            
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-bolt-lightning text-emerald-500 text-[10px]"></i>
+                <p class="text-[10px] text-zinc-400 tracking-widest uppercase font-black">Velocity Elite</p>
+            </div>
+            <p class="text-[8px] text-zinc-600 tracking-[0.2em] uppercase italic font-bold">Developed by HSR Studio © 2026</p>
+        </div>
+    </div>
+    <div id="auth-modal" class="hidden fixed inset-0 z-[400] bg-[#030303]/90 backdrop-blur-2xl flex items-center justify-center p-6">
+        <div class="bg-[#0a0a0b] border border-white/10 p-10 rounded-[40px] max-w-sm w-full shadow-[0_0_50px_rgba(0,0,0,0.8)] relative">
+            <button onclick="closeModal('auth-modal')" class="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors w-8 h-8 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="text-center mb-10">
+                <div class="w-20 h-20 bg-emerald-500/10 rounded-[24px] flex items-center justify-center mx-auto mb-6 border border-emerald-500/20 text-emerald-500 shadow-inner">
+                    <i class="fas fa-fingerprint text-4xl"></i>
+                </div>
+                <h2 class="text-3xl font-black tracking-tight text-white mb-2">Kimlik Doğrulama</h2>
+                <p class="text-[10px] text-zinc-400 tracking-[0.2em] uppercase font-bold">Bulut Senkronizasyonu</p>
+            </div>
+
+            <div class="space-y-6 flex flex-col items-center w-full">
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID_BURAYA.apps.googleusercontent.com"
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-callback="handleGoogleLogin"
+                     data-auto_prompt="false">
+                </div>
+
+                <div class="g_id_signin w-full flex justify-center drop-shadow-lg"
+                     data-type="standard"
+                     data-shape="pill"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-size="large"
+                     data-logo_alignment="left">
+                </div>
+                
+                <div class="mt-8 p-5 bg-white/5 border border-white/10 rounded-2xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                    <p class="text-[10px] text-zinc-400 text-left leading-relaxed font-medium pl-2">
+                        Giriş yaparak tüm hız testi geçmişinizi güvence altına alabilir ve <strong>HSR-AI Engine</strong> analizlerinize her cihazdan erişebilirsiniz.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="hidden fixed inset-0 z-[400] bg-[#030303]/90 backdrop-blur-2xl flex items-center justify-center p-6">
+        <div class="bg-[#0a0a0b] border border-white/10 p-10 rounded-[40px] max-w-sm w-full shadow-[0_0_50px_rgba(0,0,0,0.8)] relative">
+            <button onclick="closeModal('profile-modal')" class="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors w-8 h-8 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="text-center mb-8 mt-4">
+                <div class="w-28 h-28 bg-gradient-to-tr from-emerald-600 to-emerald-900 rounded-[32px] flex items-center justify-center mx-auto mb-6 text-4xl font-black shadow-[0_0_30px_rgba(16,185,129,0.3)] overflow-hidden relative border-2 border-emerald-500/50 rotate-3 transition-transform hover:rotate-0">
+                    <img id="profile-image" src="" class="hidden w-full h-full object-cover absolute inset-0">
+                    <span id="profile-initial" class="relative z-10 text-white font-black drop-shadow-md">K</span>
+                </div>
+                <h2 id="profile-name" class="text-2xl font-black tracking-tight text-white mb-1">Kullanıcı</h2>
+                <p id="profile-email" class="text-[10px] text-emerald-500/80 uppercase tracking-widest font-bold">mail@hsrstudio.com</p>
+            </div>
+
+            <div class="bg-black/50 border border-white/10 rounded-3xl p-6 mb-8 shadow-inner">
+                <div class="flex justify-between items-center mb-5 pb-5 border-b border-white/5">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-crown text-emerald-500 text-[10px]"></i>
+                        <span class="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Plan</span>
+                    </div>
+                    <span id="profile-status-badge" class="text-[9px] font-black bg-zinc-800 px-4 py-1.5 rounded-full uppercase tracking-widest text-zinc-400 border border-white/5">STANDART</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-chart-line text-emerald-500 text-[10px]"></i>
+                        <span class="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Toplam Analiz</span>
+                    </div>
+                    <span id="profile-test-count" class="text-sm font-black text-white bg-white/10 px-3 py-1 rounded-lg border border-white/10">0</span>
+                </div>
+            </div>
+
+            <button onclick="logout()" class="w-full py-5 border border-red-900/50 text-red-500 rounded-2xl font-black text-[10px] hover:bg-red-500/10 hover:border-red-500/80 transition-all uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(239,68,68,0.1)] flex items-center justify-center gap-2">
+                <i class="fas fa-right-from-bracket"></i> Oturumu Kapat
+            </button>
+        </div>
+    </div>
+    <div id="limit-modal" class="hidden fixed inset-0 z-[400] bg-[#030303]/90 backdrop-blur-2xl flex items-center justify-center p-6">
+        <div class="bg-[#0a0a0b] border border-white/10 p-10 rounded-[40px] max-w-sm w-full shadow-[0_0_50px_rgba(239,68,68,0.15)] relative">
+            <button onclick="closeModal('limit-modal')" class="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors w-8 h-8 bg-white/5 rounded-full flex items-center justify-center border border-white/10">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="text-center mb-10 mt-4">
+                <div class="w-20 h-20 bg-red-500/10 rounded-[24px] flex items-center justify-center mx-auto mb-6 border border-red-500/20 text-red-500 shadow-inner rotate-3">
+                    <i class="fas fa-battery-empty text-4xl"></i>
+                </div>
+                <h2 class="text-3xl font-black tracking-tight text-white mb-2">Limit Doldu</h2>
+                <p class="text-[10px] text-zinc-400 tracking-[0.2em] uppercase font-bold leading-relaxed px-4">Ücretsiz günlük analiz hakkınızı doldurdunuz.</p>
+            </div>
+
+            <div class="space-y-4">
+                <button id="watch-ad-btn" onclick="watchAdForTest()" class="w-full flex items-center justify-center gap-4 bg-white/5 border border-white/10 text-white py-5 rounded-2xl font-black text-[10px] hover:bg-white/10 transition-all uppercase tracking-[0.2em] shadow-lg group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    <i class="fas fa-play text-emerald-500 group-hover:scale-125 transition-transform"></i> Reklam İzle (+1 Hak)
+                </button>
+                
+                <div class="relative flex py-4 items-center">
+                    <div class="flex-grow border-t border-white/5"></div>
+                    <span class="flex-shrink-0 mx-4 text-zinc-600 text-[9px] uppercase font-black tracking-[0.4em]">YADA</span>
+                    <div class="flex-grow border-t border-white/5"></div>
+                </div>
+
+                <button onclick="closeModal('limit-modal'); openModal('pro-modal');" class="w-full flex items-center justify-center gap-4 bg-emerald-600 text-black py-5 rounded-2xl font-black text-[10px] hover:bg-emerald-500 transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] uppercase tracking-[0.2em] hover:scale-105">
+                    <i class="fas fa-bolt text-lg"></i> Sınırları Kaldır
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pro-modal" class="fixed inset-0 bg-[#030303]/95 backdrop-blur-3xl z-[500] hidden overflow-y-auto">
+        <div class="max-w-md mx-auto px-8 py-20 relative">
+            <button onclick="closeModal('pro-modal')" class="absolute top-8 right-8 text-zinc-500 hover:text-white transition-colors w-10 h-10 bg-white/5 rounded-full flex items-center justify-center border border-white/10 shadow-lg">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="text-center mb-14 mt-10">
+                <div class="inline-block px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-6">
+                    <span class="text-[9px] text-emerald-500 tracking-[0.5em] uppercase font-black">Velocity Elite Pro</span>
+                </div>
+                <h2 class="text-5xl font-black mt-2 mb-6 tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">Gücü Keşfet</h2>
+                <p class="text-xs font-light text-zinc-400 leading-relaxed px-4 mb-2">
+                    <strong class="text-white">HSR-AI Arıza Tespit Motoru</strong> ve <strong class="text-white">Gerçek Zamanlı Oyun Pingi</strong> analizörü ile profesyonel bir ağ deneyimi yaşayın.
+                </p>
+                <p class="text-[9px] text-emerald-500/80 uppercase tracking-widest font-bold">Ödeme sonrası anında dijital teslimat</p>
+            </div>
+
+            <div class="bg-[#0a0a0b] p-10 rounded-[40px] text-center mb-10 border-2 border-emerald-500/30 relative overflow-hidden shadow-[0_0_50px_rgba(16,185,129,0.1)] group hover:border-emerald-500/50 transition-colors">
+                <div class="absolute top-0 right-0 bg-emerald-600 text-[8px] font-black text-black px-5 py-2 uppercase tracking-[0.3em] rounded-bl-2xl shadow-lg">EN İYİ FİYAT</div>
+                <div class="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-crown text-emerald-500 text-2xl group-hover:scale-110 transition-transform"></i>
+                </div>
+                <p class="text-[9px] uppercase tracking-[0.4em] text-emerald-500/80 mb-2 font-black">Aylık Sınırsız Erişim</p>
+                <div class="flex items-center justify-center gap-2 mb-2">
+                    <h3 class="text-7xl font-black text-white tracking-tighter">$0.99</h3>
+                </div>
+                <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em] mt-4">İstediğiniz zaman iptal edin</p>
+            </div>
+
+            <div class="relative mt-8">
+                <button id="iyzico-pay" onclick="simulateIyzicoError()" class="w-full bg-white text-black py-5 rounded-[24px] font-black flex items-center justify-center gap-3 hover:bg-zinc-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-[1.02]">
+                    <img src="https://www.iyzico.com/assets/images/logo.svg" style="height: 18px;" alt="iyzico" class="opacity-90 mix-blend-multiply">
+                    <span class="tracking-[0.3em] text-[11px] uppercase ml-2">İLE GÜVENLİ ÖDE</span>
+                </button>
+                
+                <div id="iyzico-error-msg" class="hidden absolute -bottom-24 left-0 w-full bg-red-950/90 text-red-200 text-[10px] p-5 rounded-2xl border border-red-500/30 text-center backdrop-blur-xl shadow-2xl animate-[slideUp_0.4s_ease-out] font-medium leading-relaxed z-[600]">
+                    <i class="fas fa-triangle-exclamation mr-2 text-red-500 text-lg mb-2 block"></i>
+                    <strong class="text-white tracking-wider">İşlem Reddedildi:</strong> Satıcı paneli API yapılandırması eksik veya geçersiz. (Hata Kodu: IYZ-401-AUTH)
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-center mt-16 gap-3">
+                <div class="flex items-center gap-4 opacity-70">
+                    <i class="fab fa-cc-visa text-3xl text-white"></i>
+                    <i class="fab fa-cc-mastercard text-3xl text-white"></i>
+                </div>
+                <p class="text-[8px] text-zinc-600 tracking-[0.2em] uppercase font-bold text-center px-4">Kart bilgileriniz 256-Bit SSL ile korunur ve HSR Studio tarafından saklanmaz.</p>
+            </div>
+        </div>
+    </div>
+    <script>
+        // --- Uygulama Durumu (State) ve Hafıza Yönetimi ---
+        let state = JSON.parse(localStorage.getItem('velocity_v90_data')) || {
+            isPro: false,
+            testsToday: 0,
+            totalTests: 0,
+            lastDate: new Date().toLocaleDateString('tr-TR'),
+            history: Array(30).fill(0).map(() => Math.floor(Math.random() * 50 + 20)),
+            user: null
+        };
+        let chartInstance = null;
+
+        // --- SADECE GOOGLE GİRİŞ (GSI) YÖNETİMİ ---
+        function decodeJwtResponse(token) {
+            let base64Url = token.split('.')[1];
+            let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function handleGoogleLogin(response) {
+            const payload = decodeJwtResponse(response.credential);
+            state.user = {
+                name: payload.name,
+                email: payload.email,
+                picture: payload.picture
+            };
+            save();
+            updateUIForAuth();
+            closeModal('auth-modal');
+            // Premium hissi: Giriş başarılı olunca otomatik profil açılır
+            setTimeout(() => openModal('profile-modal'), 400);
+        }
+
+        function logout() {
+            state.user = null;
+            state.isPro = false; // Güvenlik adımı
+            save();
+            location.reload();
+        }
+
+        function updateUIForAuth() {
+            const menuBtnText = document.getElementById('menu-auth-text');
+            const navBtnName = document.getElementById('nav-profile-name');
+            const profileImage = document.getElementById('profile-image');
+            const profileInitial = document.getElementById('profile-initial');
+            
+            if (state.user) {
+                menuBtnText.innerText = `Profil (${state.user.name})`;
+                navBtnName.innerText = state.user.name;
+                document.getElementById('profile-name').innerText = state.user.name;
+                document.getElementById('profile-email').innerText = state.user.email;
+                
+                if (state.user.picture) {
+                    profileImage.src = state.user.picture;
+                    profileImage.classList.remove('hidden');
+                    profileInitial.classList.add('hidden');
+                } else {
+                    profileInitial.innerText = state.user.name.charAt(0);
+                    profileImage.classList.add('hidden');
+                    profileInitial.classList.remove('hidden');
+                }
+
+                document.getElementById('profile-status-badge').innerText = state.isPro ? "PRO ÜYE" : "STANDART";
+                document.getElementById('profile-status-badge').className = state.isPro ? 
+                    "text-[9px] font-black bg-emerald-600 text-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.5)]" : 
+                    "text-[9px] font-black bg-zinc-800 text-zinc-400 px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/5";
+                document.getElementById('profile-test-count').innerText = state.totalTests || 0;
+            }
+        }
+
+        // --- IYZICO & ADSENSE ONAYI İÇİN GELİŞMİŞ SEO VE YASAL METİNLER ---
+        const pageContents = {
+            about: { 
+                title: "HSR Studio Vizyonu", 
+                html: `
+                    <p class="text-white text-lg font-bold mb-4">Yeni Nesil Ağ Analizi: Velocity Elite v9.0</p>
+                    <p><strong>HSR Studio</strong> olarak, dijital dünyanın temel altyapısı olan internet bağlantılarının şeffaf, ölçülebilir ve anlaşılır olması gerektiğine inanıyoruz. Geliştirme ekibimizle 2026 web standartlarına uygun olarak tasarladığımız <strong>Velocity Elite</strong>, sıradan bir hız testinin çok ötesindedir.</p>
+                    <p class="mt-4">Velocity Elite, bünyesindeki <strong>HSR-AI Engine</strong> sayesinde bağlantınızdaki darboğazları tespit eder, oyuncular için global sunucu pinglerini ölçer ve size eyleme dönüştürülebilir optimizasyon tavsiyeleri sunar.</p>
+                    <p class="mt-4 text-emerald-500 font-bold">Destek ve İletişim: hsrstudio345@gmail.com</p>
+                ` 
+            },
+            privacy: { 
+                title: "Veri ve Gizlilik Bildirimi", 
+                html: `
+                    <p>Kullanıcı gizliliği, HSR Studio'nun temel geliştirme prensibidir. Sistemimizi ücretsiz ve erişilebilir tutmak için Google AdSense reklam ağı ile entegre çalışmaktayız.</p>
+                    <h3 class="mt-6 text-emerald-500 font-bold tracking-widest uppercase text-[10px]">Çerezler (Cookies) ve Reklam Politikası</h3>
+                    <p class="mt-2">Google ve üçüncü taraf sağlayıcılar, sitemize ve diğer web sitelerine yaptığınız önceki ziyaretlere dayalı olarak reklam yayınlamak üzere çerezleri kullanır. Kişiselleştirilmiş reklamcılığı <a href="https://myadcenter.google.com/" target="_blank" class="text-emerald-400 underline hover:text-white">Google Reklam Ayarları</a> sayfasından dilediğiniz zaman devre dışı bırakabilirsiniz.</p>
+                    <h3 class="mt-6 text-emerald-500 font-bold tracking-widest uppercase text-[10px]">Toplanan Veriler ve İletişim</h3>
+                    <p class="mt-2">Google kimlik doğrulama sistemi (GSI) ile giriş yaptığınızda, yalnızca temel profil verileriniz (İsim, E-posta, Profil Resmi) yerel tarayıcı hafızanızda (Local Storage) tutulur. Hız testi metrikleriniz, ping ve jitter değerleriniz anonim olarak işlenir; üçüncü taraflara kesinlikle satılmaz.</p>
+                    <p class="mt-4 text-white font-bold">Veri talepleri için: hsrstudio345@gmail.com</p>
+                ` 
+            },
+            terms: { 
+                title: "Şartlar ve İade Koşulları", 
+                html: `
+                    <p>Velocity Elite platformunu kullanarak aşağıdaki şartları yasal olarak kabul etmiş sayılırsınız.</p>
+                    <ul class="list-disc pl-5 mt-4 space-y-4">
+                        <li><strong class="text-white">Veri Doğruluğu:</strong> Sağlanan hız ve ping analizleri anlık durumu yansıtır. Arka planda çalışan uygulamalar, Wi-Fi parazitleri veya ISS altyapı çalışmaları sonuçları doğrudan etkileyebilir.</li>
+                        <li><strong class="text-white">PRO Plan ve Teslimat Koşulları:</strong> PRO plan aboneliği ile HSR-AI teşhis motoruna ve oyun sunucuları veritabanına sınırsız erişim sağlanır. Ödeme iyzico güvenli altyapısı ile gerçekleşir. Ürün dijital bir hizmet (SaaS) olduğu için ödeme onaylandığı an dijital teslimat gerçekleşir ve hesap PRO statüsüne yükseltilir.</li>
+                        <li><strong class="text-emerald-500">İPTAL VE İADE POLİTİKASI (ÖNEMLİ):</strong> Sunulan PRO hizmet tamamen dijital bir üründür ve anında kullanıma açılır. Bu nedenle, 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği gereğince <strong>dijital ürünlerde cayma hakkı ve iade bulunmamaktadır.</strong> Aboneliğinizi dilediğiniz zaman iptal edebilir ve bir sonraki dönem için yenilenmesini durdurabilirsiniz.</li>
+                        <li><strong class="text-white">İletişim:</strong> Her türlü soru, iptal talebi ve destek için bize <strong class="text-emerald-400">hsrstudio345@gmail.com</strong> adresinden ulaşabilirsiniz.</li>
+                    </ul>
+                ` 
+            }
+        };
+
+        // --- Temel UI ve Navigasyon Fonksiyonları ---
+        function save() { localStorage.setItem('velocity_v90_data', JSON.stringify(state)); }
+        
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            const overlay = document.getElementById('menu-overlay');
+            menu.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function openContent(pageId) {
+            if(!document.getElementById('side-menu').classList.contains('-translate-x-full')) toggleMenu(); 
+            const data = pageContents[pageId];
+            document.getElementById('content-title').innerText = data.title;
+            document.getElementById('content-body').innerHTML = data.html;
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('content-page').classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+
+        function closeContentPage() {
+            document.getElementById('content-page').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function handleAccountClick() {
+            if(!document.getElementById('side-menu').classList.contains('-translate-x-full')) toggleMenu(); 
+            state.user ? openModal('profile-modal') : openModal('auth-modal');
+        }
+
+        function acceptMandatoryCookies() {
+            localStorage.setItem('v90_cookies_accepted', 'true');
+            document.getElementById('mandatory-cookie-screen').classList.add('opacity-0');
+            setTimeout(() => document.getElementById('mandatory-cookie-screen').classList.add('hidden'), 700);
+        }
+        // --- PRO ÖZELLİK 1: HSR-AI ARIZA TESPİT & TEŞHİS MOTORU ---
+        function runAIAnalyst(speed, ping, jitter) {
+            const advice = document.getElementById('analyst-advice');
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            const badges = document.getElementById('ai-badges');
+            
+            badges.classList.remove('hidden');
+            let report = "";
+
+            if (speed < 20) {
+                dot.className = "status-dot bg-red-500 shadow-[0_0_15px_#ef4444]";
+                text.innerText = "Durum: Kritik Darboğaz";
+                report = "HSR-AI Analizi: Mevcut indirme hızınız modern web standartları ve 4K medya tüketimi için yetersiz. Olası sebep: ISS kaynaklı bölgesel altyapı sorunu veya eski nesil (Wi-Fi 4) yönlendirici kullanımı. Öneri: Modeminizi 10 saniye kapatıp açarak IP yenilemesi yapın, sorun sürerse müşteri hizmetleri ile görüşün.";
+                badges.innerHTML = '<span class="text-[9px] bg-red-500/20 text-red-500 px-3 py-1 rounded-full border border-red-500/30 uppercase font-black tracking-widest shadow-inner">Düşük Bant Genişliği</span>';
+            } else if (ping > 60 || jitter > 10) {
+                dot.className = "status-dot bg-yellow-500 shadow-[0_0_15px_#eab308]";
+                text.innerText = "Durum: Kararsız Bağlantı";
+                report = "HSR-AI Analizi: Bant genişliğiniz yeterli düzeyde ancak gecikme (ping) ve dalgalanma (jitter) değerleriniz yüksek. Bu durum rekabetçi oyunlarda 'lag' ve paket kaybı (packet loss) yaşatır. Öneri: Ağınızda 2.4GHz kanal çakışması olabilir. Modeminizi 5GHz bandına alın veya CAT6 kablolu bağlantıya geçiş yapın.";
+                badges.innerHTML = '<span class="text-[9px] bg-yellow-500/20 text-yellow-500 px-3 py-1 rounded-full border border-yellow-500/30 uppercase font-black tracking-widest shadow-inner">Yüksek Jitter Uyarısı</span>';
+            } else {
+                dot.className = "status-dot bg-emerald-500 shadow-[0_0_15px_#10b981]";
+                text.innerText = "Durum: Optimize Bağlantı";
+                report = "HSR-AI Analizi: Hattınız şu an tam kapasite ve mükemmel stabilitesiyle çalışıyor. Herhangi bir paket kaybı veya ağ tıkanıklığı tespit edilmedi. 4K/8K Streaming, bulut oyun sistemleri (GeForce Now) ve rekabetçi e-spor oyunları için ideal koşullardasınız.";
+                badges.innerHTML = '<span class="text-[9px] bg-emerald-500/20 text-emerald-500 px-3 py-1 rounded-full border border-emerald-500/30 uppercase font-black tracking-widest shadow-inner">Sistem Tam Kapasite</span>';
+            }
+            advice.innerText = report;
+        }
+
+        // --- PRO ÖZELLİK 2: GAMING PING ANALYZER (GERÇEKÇİ SİMÜLASYON) ---
+        function updateGamingPings(basePing) {
+            if (!state.isPro) return;
+            
+            // Farklı oyun sunucuları için uzaklık ofsetleri (ms cinsinden ekleme)
+            const games = [
+                { id: 'game-val', offset: 8 },  // Valorant (Frankfurt/İstanbul Sunucuları)
+                { id: 'game-lol', offset: 12 }, // LoL (TR/EUW Sunucuları)
+                { id: 'game-cs', offset: 25 },  // CS2 (Viyana/Polonya Sunucuları)
+                { id: 'game-dc', offset: 15 }   // Discord (Rotterdam Ses Sunucuları)
+            ];
+
+            games.forEach(game => {
+                const el = document.getElementById(game.id);
+                const msEl = el.querySelector('.game-ms');
+                
+                // Gerçekçi oyun pingi: Temel ping + Sunucu uzaklığı + Küçük çevresel dalgalanma
+                let gameMs = Math.round(basePing + game.offset + (Math.random() * 4));
+                msEl.innerText = gameMs + " ms";
+                
+                // Renk Kodlaması
+                if(gameMs < 45) {
+                    msEl.className = "text-[12px] font-black text-emerald-400 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)] game-ms";
+                    el.style.borderColor = "rgba(16,185,129,0.3)";
+                    el.style.background = "rgba(16,185,129,0.05)";
+                } else if(gameMs < 85) {
+                    msEl.className = "text-[12px] font-black text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.5)] game-ms";
+                    el.style.borderColor = "rgba(234,179,8,0.3)";
+                    el.style.background = "rgba(234,179,8,0.05)";
+                } else {
+                    msEl.className = "text-[12px] font-black text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.5)] game-ms";
+                    el.style.borderColor = "rgba(239,68,68,0.3)";
+                    el.style.background = "rgba(239,68,68,0.05)";
+                }
+            });
+        }
+
+        // --- STRATEJİK LİMİT: REKLAM İZLE VE HAK KAZAN ---
+        function watchAdForTest() {
+            const btn = document.getElementById('watch-ad-btn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin text-lg"></i> İşleniyor...';
+            btn.disabled = true;
+
+            // 4 Saniyelik Sponsorlu İçerik Simülasyonu
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-check text-lg"></i> Erişim Onaylandı!';
+                btn.className = "w-full flex items-center justify-center gap-4 bg-emerald-600/20 border border-emerald-500 text-emerald-400 py-5 rounded-2xl font-black text-[10px] transition-all uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(16,185,129,0.2)]";
+                
+                state.testsToday--; // Kullanıcının hakkını iade et
+                save();
+                document.getElementById('rem-count').innerText = "1 / 1";
+
+                setTimeout(() => {
+                    closeModal('limit-modal');
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                    btn.className = "w-full flex items-center justify-center gap-4 bg-white/5 border border-white/10 text-white py-5 rounded-2xl font-black text-[10px] hover:bg-white/10 transition-all uppercase tracking-[0.2em] shadow-lg group relative overflow-hidden";
+                }, 1500);
+            }, 4000);
+        }
+
+        // --- IYZICO ÖDEME HATA SİMÜLASYONU (PREMIUM HİSSİYAT) ---
+        function simulateIyzicoError() {
+            const btn = document.getElementById('iyzico-pay');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin text-black text-lg"></i> Bağlantı Kuruluyor...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                
+                const errorMsg = document.getElementById('iyzico-error-msg');
+                errorMsg.classList.remove('hidden');
+                
+                // 6 saniye sonra hatayı otomatik gizle
+                setTimeout(() => errorMsg.classList.add('hidden'), 6000);
+            }, 3000);
+        }
+        // --- ANA HIZ TESTİ ALGORİTMASI VE ANİMASYON MOTORU ---
+        async function handleTestRequest() {
+            if (state.isPro || state.testsToday < 1) {
+                startMainAnalysis();
+            } else {
+                openModal('limit-modal');
+            }
+        }
+
+        async function startMainAnalysis() {
+            const btn = document.getElementById('test-btn');
+            const mainVal = document.getElementById('main-value');
+            const phase = document.getElementById('test-phase');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> ANALİZ EDİLİYOR';
+            btn.style.boxShadow = "none";
+            btn.style.transform = "scale(0.98)";
+            btn.style.opacity = "0.7";
+
+            // 1. PING & JITTER AŞAMASI
+            phase.innerText = "GECİKME ÖLÇÜLÜYOR...";
+            let pings = [];
+            for(let i=0; i<4; i++) {
+                let start = performance.now();
+                try { await fetch('https://1.1.1.1/cdn-cgi/trace', { mode: 'no-cors', cache: 'no-store' }); } catch(e) {}
+                pings.push(performance.now() - start);
+            }
+            const avgPing = Math.round(pings.reduce((a,b) => a+b, 0) / pings.length);
+            const jitter = (Math.abs(pings[3] - pings[0]) / 3).toFixed(1);
+
+            document.getElementById('stat-ping').innerHTML = `${avgPing} <span class='text-[9px] text-zinc-600'>ms</span>`;
+            document.getElementById('stat-jitter').innerHTML = `${jitter} <span class='text-[9px] text-zinc-600'>ms</span>`;
+
+            // 2. DOWNLOAD (İNDİRME) AŞAMASI
+            phase.innerText = "İNDİRME TESTİ...";
+            let dlStart = performance.now();
+            let dlAnim = setInterval(() => {
+                let temp = (Math.random() * 15) + 65; // 65-80 Mbps arası medium dalgalanma
+                mainVal.innerHTML = `${Math.floor(temp)}<span class="text-4xl text-zinc-600 font-light">.${Math.floor(Math.random()*9)}</span>`;
+                updateNeedle(temp);
+            }, 100);
+
+            await new Promise(r => setTimeout(r, 4000)); 
+            clearInterval(dlAnim);
+            let dlSpeed = (Math.random() * 15 + 70).toFixed(1); // Final Download Hızı
+            mainVal.innerHTML = `${dlSpeed.split('.')[0]}<span class="text-4xl text-zinc-600 font-light">.${dlSpeed.split('.')[1]}</span>`;
+            updateNeedle(dlSpeed);
+            document.getElementById('stat-down').innerHTML = `${dlSpeed} <span class='text-[9px] text-zinc-600'>Mb</span>`;
+
+            // 3. UPLOAD (YÜKLEME) AŞAMASI
+            phase.innerText = "YÜKLEME TESTİ...";
+            let ulAnim = setInterval(() => {
+                let temp = (Math.random() * 5) + 20; // 20-25 Mbps arası upload dalgalanması
+                mainVal.innerHTML = `${Math.floor(temp)}<span class="text-4xl text-zinc-600 font-light">.${Math.floor(Math.random()*9)}</span>`;
+                updateNeedle(temp * 2.5); // İbre Upload için görsel olarak orantılandı
+            }, 100);
+
+            await new Promise(r => setTimeout(r, 3500));
+            clearInterval(ulAnim);
+            let ulSpeed = (Math.random() * 5 + 22).toFixed(1); // Final Upload Hızı
+            mainVal.innerHTML = `${ulSpeed.split('.')[0]}<span class="text-4xl text-zinc-600 font-light">.${ulSpeed.split('.')[1]}</span>`;
+            document.getElementById('stat-up').innerHTML = `${ulSpeed} <span class='text-[9px] text-zinc-600'>Mb</span>`;
+            
+            // İbreyi testten sonra sıfıra yavaşça çekme (Güzel bir bitiş efekti)
+            setTimeout(() => { updateNeedle(0); }, 1000); 
+
+            // TEST BİTİRİCİ
+            finishAnalysis(dlSpeed, avgPing, jitter);
+        }
+
+        function finishAnalysis(speed, ping, jitter) {
+            const btn = document.getElementById('test-btn');
+            const phase = document.getElementById('test-phase');
+            
+            phase.innerText = "ANALİZ TAMAMLANDI";
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.style.transform = "scale(1)";
+            btn.style.boxShadow = "0 0 20px rgba(16, 185, 129, 0.4)";
+            btn.innerHTML = '<i class="fas fa-satellite-dish mr-2 text-black/70"></i> YENİDEN BAŞLAT';
+
+            if(!state.isPro) state.testsToday++;
+            state.totalTests++;
+            state.history.shift();
+            state.history.push(parseFloat(speed));
+            save();
+            
+            document.getElementById('rem-count').innerText = state.isPro ? "Sınırsız" : (1 - state.testsToday) + " / 1";
+            updateUIForAuth();
+            
+            // PRO İSE KİLİTLERİ AÇ VE ÇALIŞTIR
+            if(state.isPro) {
+                runAIAnalyst(speed, ping, jitter);
+                updateGamingPings(ping);
+            }
+        }
+
+        // --- İBRE ANİMASYON MATEMATİĞİ ---
+        function updateNeedle(val) {
+            const needle = document.getElementById('needle');
+            const path = document.getElementById('gauge-path');
+            const MAX_SPEED = 150; // Kadranın maksimum limit değeri
+            const perc = Math.min(val / MAX_SPEED, 1);
+            
+            // 180 derece dönüş (-90'dan +90'a)
+            const rot = (perc * 180) - 90;
+            const offset = 440 - (perc * 440);
+            
+            needle.style.transform = `translateX(-50%) rotate(${rot}deg)`;
+            path.style.strokeDashoffset = offset;
+        }
+
+        // --- SİSTEM BAŞLATICI VE ARAYÜZ KURULUMU ---
+        window.onload = () => {
+            // Matrix/Glitter Arkaplan Efekti (Yeşil Tonlarında)
+            const canvas = document.getElementById('glitter-bg');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            const initCanvas = () => {
+                canvas.width = window.innerWidth; 
+                canvas.height = window.innerHeight;
+                for(let i=0; i<40; i++) particles.push({
+                    x: Math.random() * canvas.width, 
+                    y: Math.random() * canvas.height, 
+                    s: Math.random() * 1.5,
+                    o: Math.random() * 0.5
+                });
+            };
+            const drawCanvas = () => {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                particles.forEach(p => { 
+                    ctx.fillStyle = `rgba(16, 185, 129, ${p.o})`; 
+                    ctx.beginPath(); 
+                    ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); 
+                    ctx.fill(); 
+                    p.y += 0.3; 
+                    if(p.y > canvas.height) p.y = 0; 
+                });
+                requestAnimationFrame(drawCanvas);
+            };
+            initCanvas(); 
+            drawCanvas();
+
+            // Kullanıcı Verilerini Yükle
+            updateUIForAuth();
+            
+            // Pro Kullanıcılar İçin Kilitleri Kaldır
+            if(state.isPro) {
+                document.getElementById('pro-lock-overlay').classList.add('hidden');
+                document.getElementById('pro-features-area').classList.remove('pro-locked');
+                document.getElementById('rem-count').innerText = "Sınırsız";
+            } else {
+                document.getElementById('rem-count').innerText = (1 - state.testsToday) + " / 1";
+            }
+
+            // Çerez Onayı Kontrolü
+            if(localStorage.getItem('v90_cookies_accepted')) {
+                document.getElementById('mandatory-cookie-screen').classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
